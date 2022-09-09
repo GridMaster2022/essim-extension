@@ -1,0 +1,80 @@
+version: '3.4'
+
+volumes:
+  mongo_storage:
+    driver: local
+  influxdb_storage:
+    driver: local
+  grafana_storage:
+    driver: local
+
+networks:
+  mapeditor-net:
+    driver: bridge
+    name: mapeditor-net
+
+services:
+  mongo:
+    container_name: mongo-stripped
+    image: mvertes/alpine-mongo
+    volumes:
+      - mongo_storage:/data/db
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    networks:
+      - mapeditor-net
+
+  influxdb:
+    container_name: influxdb-stripped
+    image: influxdb:1.7
+    ports:
+      - "${INFLUXDB_PORT:-8086}:8086"
+      - "${INFLUXDB_RPC_PORT:-8088}:8088"
+    environment:
+      - INFLUXDB_ADMIN_USER={INFLUX_USER}
+      - INFLUXDB_ADMIN_PASSWORD={INFLUX_PW}
+      - INFLUXDB_DB=panelservice
+      - INFLUXDB_WRITE_USER={INFLUX_USER}
+      - INFLUXDB_WRITE_USER_PASSWORD={INFLUX_PW}
+    volumes:
+      - influxdb_storage:/var/lib/influxdb
+    networks:
+      - mapeditor-net  
+
+  essim_engine_smo_nl_extended:
+    container_name: essim-engine-extended  
+    image: ${DOCKER_REGISTRY-}essimenginesmonlextended
+    build:
+      context: .
+      dockerfile: essim_engine_smo_nl_extended/Dockerfile
+    ports:
+      - 8112:8112
+      - 8080:80
+    environment:
+     - HTTP_SERVER_SCHEME=http
+     - HTTP_SERVER_HOSTNAME=0.0.0.0
+     - HTTP_SERVER_PORT=8112
+     - HTTP_SERVER_PATH=essim
+     - MONGODB_HOST=mongo
+     - MONGODB_PORT=27017
+     - INFLUXDB_INTERNAL_URL=http://influxdb-stripped:8086
+     - INFLUXDB_EXTERNAL_URL=http://localhost:8086
+     - PROFILE_QUERY_TIMEOUT=45
+     - CONSOLE_LOG_LEVEL=info
+     - FILE_LOG_LEVEL=off
+     - LOG_FILE_LOCATION=/tmp
+     - MAX_LOG_FILE_SIZE=10MB
+     - MAX_LOG_HISTORY_DAYS=1
+     - LOG_FILES_SIZE_CAP=10MB
+     - AWS_ESSIM_QUEUE_URL=https://sqs.eu-central-1.amazonaws.com/{AWS_ACCOUNT_NR}/gridmaster_essim_queue
+     - AWS_ESSIM_EXPORT_QUEUE_URL=https://sqs.eu-central-1.amazonaws.com/{AWS_ACCOUNT_NR}/gridmaster_essim_export_queue
+     - AWS_ESSIM_QUEUE_TIMEOUT=30
+     - SIMULATION_START_DATE=2018-12-31T23:00:00+0100
+     - SIMULATION_END_DATE=2019-12-31T22:00:00+0100
+     - SIMULATION_OUTPUT_TYPE=CSV
+     - CSV_STORAGE_LOCATION=/opt/output
+     - DEBUG=true
+    networks:
+     - mapeditor-net
+    depends_on:
+     - mongo

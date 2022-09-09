@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<ContainerDevelopmentMode>Regular</ContainerDevelopmentMode>
+		<DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="supervisor_script" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="supervisor_script">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Kubernetes.Tools.Targets" Version="1.1.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\essim_extension_core\essim_extension_core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Startup.cs">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Compile>
+	</ItemGroup>
+
+</Project>

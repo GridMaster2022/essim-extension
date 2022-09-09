@@ -1,0 +1,6 @@
+version: '3.4'
+
+services:
+  essim_engine_smo_nl_extended:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
